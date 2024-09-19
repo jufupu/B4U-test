@@ -12,79 +12,39 @@ function getContainerWidth(container) {
 }
 
 function handleScroll(container, cardWidth, containerWidth) {
-    // Handle Next button click
-    nxtBtn.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (window.innerWidth <= 768) { // Mobile breakpoint 
-                if (container.scrollLeft + cardWidth >= container.scrollWidth) {
-                    container.scrollLeft = 0; // Loop to start
-                } else {
-                    container.scrollLeft += cardWidth; // Scroll by one card
-                }
-            } else {
-                if (container.scrollLeft + containerWidth >= container.scrollWidth) {
-                    container.scrollLeft = 0; // Loop to start
-                } else {
-                    container.scrollLeft += containerWidth; // Scroll by container width
-                }
-            }
-        });
-    });
+    const isMobile = () => window.innerWidth <= 768;
+    const scrollAmount = () => isMobile() ? cardWidth : containerWidth;
 
-    // Handle Previous button click
-    preBtn.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (window.innerWidth <= 768) { // Mobile breakpoint 
-                if (container.scrollLeft <= 0) {
-                    container.scrollLeft = container.scrollWidth - cardWidth; // Loop to end
-                } else {
-                    container.scrollLeft -= cardWidth; // Scroll by one card
-                }
-            } else {
-                if (container.scrollLeft <= 0) {
-                    container.scrollLeft = container.scrollWidth - containerWidth; // Loop to end
-                } else {
-                    container.scrollLeft -= containerWidth; // Scroll by container width
-                }
-            }
-        });
-    });
+    function scroll(direction) {
+        const scrollLeft = container.scrollLeft;
+        const maxScroll = container.scrollWidth - scrollAmount();
+
+        if (direction === 'next') {
+            container.scrollLeft = scrollLeft >= maxScroll ? 0 : scrollLeft + scrollAmount();
+        } else {
+            container.scrollLeft = scrollLeft <= 0 ? maxScroll : scrollLeft - scrollAmount();
+        }
+    }
+
+    nxtBtn.forEach(btn => btn.addEventListener('click', () => scroll('next')));
+    preBtn.forEach(btn => btn.addEventListener('click', () => scroll('prev')));
 
     // Add swipe functionality for mobile devices
     let touchStartX = 0;
-    let touchEndX = 0;
 
     container.addEventListener('touchstart', (e) => {
         touchStartX = e.touches[0].clientX;
     });
 
     container.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].clientX;
-        handleSwipe();
-    });
-
-    function handleSwipe() {
-        const swipeThreshold = 50; // Minimum distance to detect a swipe
+        const touchEndX = e.changedTouches[0].clientX;
+        const swipeThreshold = 50;
         const swipeDistance = touchStartX - touchEndX;
 
         if (Math.abs(swipeDistance) > swipeThreshold) {
-            if (swipeDistance > 0) {
-                // Swipe left (next)
-                if (container.scrollLeft + cardWidth >= container.scrollWidth) {
-                    container.scrollLeft = 0; // Loop to start
-                } else {
-                    container.scrollLeft += cardWidth; // Scroll by one card
-                }
-            } else {
-                // Swipe right (previous)
-                if (container.scrollLeft <= 0) {
-                    container.scrollLeft = container.scrollWidth - cardWidth; // Loop to end
-                } else {
-                    container.scrollLeft -= cardWidth; // Scroll by one card
-                }
-            }
+            scroll(swipeDistance > 0 ? 'next' : 'prev');
         }
-    }
+    });
 }
 
 productContainers.forEach(container => {
